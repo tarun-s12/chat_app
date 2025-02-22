@@ -14,14 +14,13 @@ def handle_connect():
 
 @socket.on('name')
 def handle_name(data):
-    users[data] = request.sid
-    sys.stdout.flush()
+    users[request.sid] = {'name': data['name'], 'language': data['language']}
 
 @socket.on('new_message')
 def handle_new_message(data):
-    data["message"] =  asyncio.run(translate_text(data["message"], "tamil"))
-    for user in users:
-        if users[user] == request.sid:
-            data["user"] = user
-    emit('chat', data, broadcast=True)
-    sys.stdout.flush()
+    sender = users.get(request.sid)
+    if sender:
+        message = data.get('message')
+        for sid, user in users.items():
+            translated_message = asyncio.run(translate_text(message, user['language']))
+            emit('chat', {'user': sender['name'], 'message': translated_message}, room=sid)

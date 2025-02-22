@@ -77,11 +77,24 @@
             button:hover {
                 background: #0056b3;
             }
+
+            select {
+                width: 100px;
+                padding: 5px;
+                margin-bottom: 10px;
+            }
         </style>
     </head>
     <body>
         <div id="home">
             <input type="text" id="name" placeholder="Enter your name">
+            <select id="language">
+                <option value="en">English</option>
+                <option value="es">Spanish</option>
+                <option value="fr">French</option>
+                <option value="de">German</option>
+                <option value="ta">Tamil</option>
+            </select>
             <button id="start">Start</button>
         </div>
         <div id="chat-window">
@@ -92,12 +105,14 @@
         <script>
             const socket = io({ autoConnect: false });
             let currentUser = '';
+            let currentLanguage = 'en';
 
             document.getElementById('start').addEventListener('click', () => {
                 currentUser = document.getElementById('name').value;
+                currentLanguage = document.getElementById('language').value;
                 socket.connect();
                 socket.on('connect', () => {
-                    socket.emit('name', currentUser);
+                    socket.emit('name', { name: currentUser, language: currentLanguage });
                 });
                 document.getElementById('home').style.display = 'none';
                 document.getElementById('chat-window').style.display = 'block';
@@ -105,7 +120,7 @@
 
             document.getElementById('send').addEventListener('click', () => {
                 const message = document.getElementById('message').value;
-                socket.emit('new_message', { user: currentUser, message: message });
+                socket.emit('new_message', { user: currentUser, message: message, language: currentLanguage });
                 document.getElementById('message').value = '';
             });
 
