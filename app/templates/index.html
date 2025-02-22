@@ -1,0 +1,123 @@
+<html>
+    <head>
+        <title>Chat App</title>
+        <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" integrity="sha384-mkQ3/7FUtcGyoppY6bz/PORYoGqOl7/aSUMn2ymDOJcapfS6PHqxhRTMh1RR0Q6+" crossorigin="anonymous"></script>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                background-color: #f4f4f4;
+                margin: 0;
+                padding: 0;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+            }
+
+            #home, #chat-window {
+                width: 300px;
+                padding: 20px;
+                background: white;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                border-radius: 8px;
+            }
+
+            #chat-window {
+                display: none;
+            }
+
+            #messages {
+                height: 200px;
+                overflow-y: scroll;
+                border: 1px solid #ddd;
+                padding: 10px;
+                margin-bottom: 10px;
+                border-radius: 4px;
+                background: #f9f9f9;
+            }
+
+            .message {
+                margin-bottom: 10px;
+                padding: 10px;
+                border-radius: 10px;
+                max-width: 80%;
+                clear: both;
+            }
+
+            .message.user {
+                background: #e1ffc7;
+                align-self: flex-end;
+                margin-left: auto;
+            }
+
+            .message.other {
+                background: #f1f1f1;
+                align-self: flex-start;
+                margin-right: auto;
+            }
+
+            input[type="text"] {
+                width: calc(100% - 22px);
+                padding: 10px;
+                margin-bottom: 10px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+            }
+
+            button {
+                width: 100%;
+                padding: 10px;
+                background: #007bff;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+            }
+
+            button:hover {
+                background: #0056b3;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="home">
+            <input type="text" id="name" placeholder="Enter your name">
+            <button id="start">Start</button>
+        </div>
+        <div id="chat-window">
+            <div id="messages"></div>
+            <input type="text" id="message" placeholder="Type your message here">
+            <button id="send">Send</button>
+        </div>
+        <script>
+            const socket = io({ autoConnect: false });
+            let currentUser = '';
+
+            document.getElementById('start').addEventListener('click', () => {
+                currentUser = document.getElementById('name').value;
+                socket.connect();
+                socket.on('connect', () => {
+                    socket.emit('name', currentUser);
+                });
+                document.getElementById('home').style.display = 'none';
+                document.getElementById('chat-window').style.display = 'block';
+            });
+
+            document.getElementById('send').addEventListener('click', () => {
+                const message = document.getElementById('message').value;
+                socket.emit('new_message', { user: currentUser, message: message });
+                document.getElementById('message').value = '';
+            });
+
+            socket.on('chat', function(data) {
+                let space = document.getElementById('messages');
+                let newData = document.createElement('div');
+                newData.classList.add('message');
+                newData.classList.add(data.user === currentUser ? 'user' : 'other');
+                newData.innerHTML = `<strong>${data.user}:</strong> ${data.message}`;
+                space.appendChild(newData);
+                space.scrollTop = space.scrollHeight; 
+            });
+        </script>
+    </body>
+</html>
